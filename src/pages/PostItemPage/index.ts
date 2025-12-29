@@ -1,0 +1,1 @@
+export { PostItemPage } from './PostItemPage';

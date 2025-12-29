@@ -1,0 +1,121 @@
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-md);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.imageWrapper {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+.condition {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.condition_new {
+  color: var(--color-success);
+}
+
+.condition_like_new {
+  color: var(--color-secondary-dark);
+}
+
+.condition_good {
+  color: var(--color-accent);
+}
+
+.condition_fair {
+  color: var(--color-muted);
+}
+
+.saveButton {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: var(--color-muted);
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.card:hover .saveButton {
+  opacity: 1;
+}
+
+.saveButton:hover,
+.saveButton.saved {
+  color: var(--color-primary);
+}
+
+.saveButton.saved {
+  opacity: 1;
+}
+
+.info {
+  padding: var(--space-md);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: var(--space-xs);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.time {
+  flex-shrink: 0;
+}

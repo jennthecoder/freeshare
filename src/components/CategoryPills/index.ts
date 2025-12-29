@@ -1,0 +1,1 @@
+export { CategoryPills } from './CategoryPills';
