@@ -7,6 +7,7 @@ import { itemRepo } from './lib/item-repo';
 import { messageRepo } from './lib/message-repo';
 import { authService, requireAuth, optionalAuth, createDemoUser } from './lib/auth';
 import type { ItemFilters, ItemCreate, ItemUpdate, ConversationCreate, MessageCreate, UserUpdate } from './types';
+import { getOAuthUrl, exchangeCodeForToken, getUserProfile } from './lib/oauth';
 
 import type { User } from './types';
 
@@ -51,6 +52,60 @@ app.post('/api/auth/demo', async (c) => {
 
   const { user, session } = createDemoUser(name);
   return c.json({ success: true, data: { user, token: session.token } });
+});
+
+// OAuth Routes
+
+// 1. Redirect to Provider
+app.get('/api/auth/:provider', (c) => {
+  const provider = c.req.param('provider');
+  if (!['google', 'facebook', 'apple'].includes(provider)) {
+    return c.json({ success: false, error: 'Invalid provider' }, 400);
+  }
+  const url = getOAuthUrl(provider);
+  return c.redirect(url);
+});
+
+// 2. Handle Callback
+app.get('/api/auth/:provider/callback', async (c) => {
+  const provider = c.req.param('provider');
+  const code = c.req.query('code');
+  const error = c.req.query('error');
+
+  if (error) {
+    return c.html(`<h3>Login Failed</h3><p>${error}</p><a href="/">Go Home</a>`);
+  }
+
+  if (!code) {
+    return c.json({ success: false, error: 'No code provided' }, 400);
+  }
+
+  try {
+    const tokenData = await exchangeCodeForToken(provider, code);
+    const profile = await getUserProfile(provider, tokenData.access_token);
+
+    // Create/Get User & Session
+    const { session } = authService.handleOAuthCallback(provider as any, profile);
+
+    // Redirect to frontend with token
+    // In production, better to set HttpOnly cookie, but for now passing via URL fragment/query
+    // or rendering a page that saves to localStorage
+    return c.html(`
+      <html>
+        <body>
+          <h1>Login Successful...</h1>
+          <script>
+            localStorage.setItem('freeshare_token', '${session.token}');
+            window.location.href = '/';
+          </script>
+        </body>
+      </html>
+    `);
+
+  } catch (err: any) {
+    console.error('OAuth Error:', err);
+    return c.html(`<h3>Login Failed</h3><p>${err.message}</p><a href="/">Go Home</a>`);
+  }
 });
 
 // Logout
@@ -351,7 +406,7 @@ async function start() {
   await initDb();
   console.log('✅ Database ready');
 
-  console.log(`🎁 FreeShare API server starting on http://localhost:${port}`);
+  console.log(`FreeShare API server starting on http://localhost:${port}`);
 
   serve({
     fetch: app.fetch,

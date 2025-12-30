@@ -327,12 +327,47 @@ function AppContent() {
       />
 
       <Modal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} title="Welcome to FreeShare">
-        <p style={{ color: 'var(--color-muted)', marginBottom: 24 }}>Sign in to save items, message givers, and share your own items</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={() => window.location.href = '/api/auth/google'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+          >
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" width={20} alt="" />
+            Continue with Google
+          </Button>
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={() => window.location.href = '/api/auth/facebook'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+          >
+            <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" width={20} alt="" />
+            Continue with Facebook
+          </Button>
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={() => window.location.href = '/api/auth/apple'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+          >
+            <img src="https://www.svgrepo.com/show/445610/brand-apple.svg" width={20} alt="" />
+            Continue with Apple
+          </Button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '24px 0' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+          <span style={{ fontSize: '0.875rem', color: 'var(--color-muted)' }}>OR</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+        </div>
+
         <form onSubmit={e => { e.preventDefault(); const formData = new FormData(e.currentTarget); const name = formData.get('name') as string; handleLogin(name); }} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
-          <input name="name" placeholder="Enter your name" required minLength={2} style={{ padding: 14, background: 'var(--color-bg)', border: '1.5px solid var(--color-border)', borderRadius: 12, fontSize: '1rem' }} />
+          <input name="name" placeholder="Enter your name (Demo)" required minLength={2} style={{ padding: 14, background: 'var(--color-bg)', border: '1.5px solid var(--color-border)', borderRadius: 12, fontSize: '1rem' }} />
           <Button type="submit" fullWidth>Continue with Demo</Button>
         </form>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted)', textAlign: 'center' }}>Demo mode: OAuth providers coming soon</p>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted)', textAlign: 'center' }}>By continuing, you agree to our Terms of Service</p>
       </Modal>
       <Modal isOpen={messageModalOpen} onClose={() => setMessageModalOpen(false)} title="Send a Message">
         {messageTarget && (
