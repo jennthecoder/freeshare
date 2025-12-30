@@ -50,7 +50,7 @@ app.post('/api/auth/demo', async (c) => {
     return c.json({ success: false, error: 'Name must be at least 2 characters' }, 400);
   }
 
-  const { user, session } = createDemoUser(name);
+  const { user, session } = await createDemoUser(name);
   return c.json({ success: true, data: { user, token: session.token } });
 });
 
@@ -85,7 +85,7 @@ app.get('/api/auth/:provider/callback', async (c) => {
     const profile = await getUserProfile(provider, tokenData.access_token);
 
     // Create/Get User & Session
-    const { session } = authService.handleOAuthCallback(provider as any, profile);
+    const { session } = await authService.handleOAuthCallback(provider as any, profile);
 
     // Redirect to frontend with token
     // In production, better to set HttpOnly cookie, but for now passing via URL fragment/query
@@ -109,10 +109,10 @@ app.get('/api/auth/:provider/callback', async (c) => {
 });
 
 // Logout
-app.post('/api/auth/logout', requireAuth, (c) => {
+app.post('/api/auth/logout', requireAuth, async (c) => {
   const token = c.req.header('Authorization')?.slice(7);
   if (token) {
-    authService.revokeSession(token);
+    await authService.revokeSession(token);
   }
   return c.json({ success: true });
 });
@@ -126,8 +126,8 @@ app.get('/api/auth/me', requireAuth, (c) => {
 // ============== USER ROUTES ==============
 
 // Get user profile
-app.get('/api/users/:id', optionalAuth, (c) => {
-  const user = userRepo.findById(c.req.param('id'));
+app.get('/api/users/:id', optionalAuth, async (c) => {
+  const user = await userRepo.findById(c.req.param('id'));
   if (!user) {
     return c.json({ success: false, error: 'User not found' }, 404);
   }
@@ -147,7 +147,7 @@ app.patch('/api/users/me', requireAuth, async (c) => {
   const userId = c.get('userId');
   const data: UserUpdate = await c.req.json();
 
-  const updated = userRepo.update(userId, data);
+  const updated = await userRepo.update(userId, data);
   if (!updated) {
     return c.json({ success: false, error: 'Failed to update profile' }, 400);
   }
@@ -174,7 +174,7 @@ app.get('/api/items', optionalAuth, async (c) => {
     offset: c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0,
   };
 
-  const { items, total } = itemRepo.findAll(filters, currentUserId);
+  const { items, total } = await itemRepo.findAll(filters, currentUserId);
 
   return c.json({
     success: true,
@@ -189,9 +189,9 @@ app.get('/api/items', optionalAuth, async (c) => {
 });
 
 // Get single item
-app.get('/api/items/:id', optionalAuth, (c) => {
+app.get('/api/items/:id', optionalAuth, async (c) => {
   const currentUserId = c.get('userId');
-  const item = itemRepo.findById(c.req.param('id'), currentUserId);
+  const item = await itemRepo.findById(c.req.param('id'), currentUserId);
 
   if (!item) {
     return c.json({ success: false, error: 'Item not found' }, 404);
@@ -222,7 +222,7 @@ app.post('/api/items', requireAuth, async (c) => {
     return c.json({ success: false, error: 'Location is required' }, 400);
   }
 
-  const item = itemRepo.create(userId, data);
+  const item = await itemRepo.create(userId, data);
   return c.json({ success: true, data: item }, 201);
 });
 
@@ -231,7 +231,7 @@ app.patch('/api/items/:id', requireAuth, async (c) => {
   const userId = c.get('userId');
   const data: ItemUpdate = await c.req.json();
 
-  const updated = itemRepo.update(c.req.param('id'), userId, data);
+  const updated = await itemRepo.update(c.req.param('id'), userId, data);
   if (!updated) {
     return c.json({ success: false, error: 'Item not found or not authorized' }, 404);
   }
@@ -240,9 +240,9 @@ app.patch('/api/items/:id', requireAuth, async (c) => {
 });
 
 // Delete item
-app.delete('/api/items/:id', requireAuth, (c) => {
+app.delete('/api/items/:id', requireAuth, async (c) => {
   const userId = c.get('userId');
-  const deleted = itemRepo.delete(c.req.param('id'), userId);
+  const deleted = await itemRepo.delete(c.req.param('id'), userId);
 
   if (!deleted) {
     return c.json({ success: false, error: 'Item not found or not authorized' }, 404);
@@ -252,25 +252,25 @@ app.delete('/api/items/:id', requireAuth, (c) => {
 });
 
 // Save/unsave item
-app.post('/api/items/:id/save', requireAuth, (c) => {
+app.post('/api/items/:id/save', requireAuth, async (c) => {
   const userId = c.get('userId');
-  itemRepo.saveItem(userId, c.req.param('id'));
+  await itemRepo.saveItem(userId, c.req.param('id'));
   return c.json({ success: true });
 });
 
-app.delete('/api/items/:id/save', requireAuth, (c) => {
+app.delete('/api/items/:id/save', requireAuth, async (c) => {
   const userId = c.get('userId');
-  itemRepo.unsaveItem(userId, c.req.param('id'));
+  await itemRepo.unsaveItem(userId, c.req.param('id'));
   return c.json({ success: true });
 });
 
 // Get saved items
-app.get('/api/saved', requireAuth, (c) => {
+app.get('/api/saved', requireAuth, async (c) => {
   const userId = c.get('userId');
   const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20;
   const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
 
-  const { items, total } = itemRepo.getSavedItems(userId, limit, offset);
+  const { items, total } = await itemRepo.getSavedItems(userId, limit, offset);
 
   return c.json({
     success: true,
@@ -280,13 +280,13 @@ app.get('/api/saved', requireAuth, (c) => {
 });
 
 // Get user's items
-app.get('/api/users/:id/items', optionalAuth, (c) => {
+app.get('/api/users/:id/items', optionalAuth, async (c) => {
   const currentUserId = c.get('userId');
   const userId = c.req.param('id');
   const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20;
   const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
 
-  const { items, total } = itemRepo.findAll({ userId, limit, offset }, currentUserId);
+  const { items, total } = await itemRepo.findAll({ userId, limit, offset }, currentUserId);
 
   return c.json({
     success: true,
@@ -298,12 +298,12 @@ app.get('/api/users/:id/items', optionalAuth, (c) => {
 // ============== MESSAGE ROUTES ==============
 
 // Get conversations
-app.get('/api/conversations', requireAuth, (c) => {
+app.get('/api/conversations', requireAuth, async (c) => {
   const userId = c.get('userId');
   const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20;
   const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
 
-  const { conversations, total } = messageRepo.getUserConversations(userId, limit, offset);
+  const { conversations, total } = await messageRepo.getUserConversations(userId, limit, offset);
 
   return c.json({
     success: true,
@@ -313,16 +313,16 @@ app.get('/api/conversations', requireAuth, (c) => {
 });
 
 // Get single conversation
-app.get('/api/conversations/:id', requireAuth, (c) => {
+app.get('/api/conversations/:id', requireAuth, async (c) => {
   const userId = c.get('userId');
-  const conversation = messageRepo.findConversationById(c.req.param('id'), userId);
+  const conversation = await messageRepo.findConversationById(c.req.param('id'), userId);
 
   if (!conversation) {
     return c.json({ success: false, error: 'Conversation not found' }, 404);
   }
 
   // Get participants
-  conversation.participants = messageRepo.getParticipants(conversation.participantIds);
+  conversation.participants = await messageRepo.getParticipants(conversation.participantIds);
 
   return c.json({ success: true, data: conversation });
 });
@@ -341,19 +341,19 @@ app.post('/api/conversations', requireAuth, async (c) => {
     return c.json({ success: false, error: 'Cannot start conversation with yourself' }, 400);
   }
 
-  const conversation = messageRepo.createConversation(userId, data);
-  conversation.participants = messageRepo.getParticipants(conversation.participantIds);
+  const conversation = await messageRepo.createConversation(userId, data);
+  conversation.participants = await messageRepo.getParticipants(conversation.participantIds);
 
   return c.json({ success: true, data: conversation }, 201);
 });
 
 // Get messages in conversation
-app.get('/api/conversations/:id/messages', requireAuth, (c) => {
+app.get('/api/conversations/:id/messages', requireAuth, async (c) => {
   const userId = c.get('userId');
   const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
   const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
 
-  const { messages, total } = messageRepo.getConversationMessages(c.req.param('id'), userId, limit, offset);
+  const { messages, total } = await messageRepo.getConversationMessages(c.req.param('id'), userId, limit, offset);
 
   return c.json({
     success: true,
@@ -371,7 +371,7 @@ app.post('/api/conversations/:id/messages', requireAuth, async (c) => {
     return c.json({ success: false, error: 'Message content is required' }, 400);
   }
 
-  const message = messageRepo.createMessage(userId, {
+  const message = await messageRepo.createMessage(userId, {
     conversationId: c.req.param('id'),
     content: content.trim()
   });
@@ -384,16 +384,16 @@ app.post('/api/conversations/:id/messages', requireAuth, async (c) => {
 });
 
 // Mark messages as read
-app.post('/api/conversations/:id/read', requireAuth, (c) => {
+app.post('/api/conversations/:id/read', requireAuth, async (c) => {
   const userId = c.get('userId');
-  messageRepo.markMessagesAsRead(c.req.param('id'), userId);
+  await messageRepo.markMessagesAsRead(c.req.param('id'), userId);
   return c.json({ success: true });
 });
 
 // Get unread count
-app.get('/api/messages/unread-count', requireAuth, (c) => {
+app.get('/api/messages/unread-count', requireAuth, async (c) => {
   const userId = c.get('userId');
-  const count = messageRepo.getUnreadCount(userId);
+  const count = await messageRepo.getUnreadCount(userId);
   return c.json({ success: true, data: { count } });
 });
 

@@ -121,3 +121,6 @@ dist
 data/freeshare.db
 *.db
 *.sqlite
+
+# my notes
+notes.md

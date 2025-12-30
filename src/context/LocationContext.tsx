@@ -12,6 +12,7 @@ interface LocationContextType {
   setLocation: (location: Location) => void;
 }
 
+//TODO: Get location from user's device
 const defaultLocation: Location = {
   lat: 40.7128,
   lng: -74.0060,

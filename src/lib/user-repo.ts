@@ -2,26 +2,29 @@ import { run, get, all, generateId } from './db';
 import type { User, UserCreate, UserUpdate } from '../types';
 
 export const userRepo = {
-  findById(id: string): User | null {
-    return get<User>(`SELECT id, email, name, avatar, bio, location_lat as locationLat, location_lng as locationLng, city, zip, auth_provider as authProvider, auth_provider_id as authProviderId, created_at as createdAt, last_active as lastActive FROM users WHERE id = ?`, [id]) || null;
+  async findById(id: string): Promise<User | null> {
+    const row = await get<User>(`SELECT id, email, name, avatar, bio, location_lat as locationLat, location_lng as locationLng, city, zip, auth_provider as authProvider, auth_provider_id as authProviderId, created_at as createdAt, last_active as lastActive FROM users WHERE id = ?`, [id]);
+    return row || null;
   },
 
-  findByAuthProvider(provider: string, providerId: string): User | null {
-    return get<User>(`SELECT id, email, name, avatar, bio, location_lat as locationLat, location_lng as locationLng, city, zip, auth_provider as authProvider, auth_provider_id as authProviderId, created_at as createdAt, last_active as lastActive FROM users WHERE auth_provider = ? AND auth_provider_id = ?`, [provider, providerId]) || null;
+  async findByAuthProvider(provider: string, providerId: string): Promise<User | null> {
+    const row = await get<User>(`SELECT id, email, name, avatar, bio, location_lat as locationLat, location_lng as locationLng, city, zip, auth_provider as authProvider, auth_provider_id as authProviderId, created_at as createdAt, last_active as lastActive FROM users WHERE auth_provider = ? AND auth_provider_id = ?`, [provider, providerId]);
+    return row || null;
   },
 
-  findByEmail(email: string): User | null {
-    return get<User>(`SELECT id, email, name, avatar, bio, location_lat as locationLat, location_lng as locationLng, city, zip, auth_provider as authProvider, auth_provider_id as authProviderId, created_at as createdAt, last_active as lastActive FROM users WHERE email = ?`, [email]) || null;
+  async findByEmail(email: string): Promise<User | null> {
+    const row = await get<User>(`SELECT id, email, name, avatar, bio, location_lat as locationLat, location_lng as locationLng, city, zip, auth_provider as authProvider, auth_provider_id as authProviderId, created_at as createdAt, last_active as lastActive FROM users WHERE email = ?`, [email]);
+    return row || null;
   },
 
-  create(data: UserCreate): User {
+  async create(data: UserCreate): Promise<User> {
     const id = generateId();
     const now = new Date().toISOString();
-    run(`INSERT INTO users (id, email, name, avatar, auth_provider, auth_provider_id, created_at, last_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [id, data.email, data.name, data.avatar || null, data.authProvider, data.authProviderId, now, now]);
-    return this.findById(id)!;
+    await run(`INSERT INTO users (id, email, name, avatar, auth_provider, auth_provider_id, created_at, last_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [id, data.email, data.name, data.avatar || null, data.authProvider, data.authProviderId, now, now]);
+    return (await this.findById(id))!;
   },
 
-  update(id: string, data: UserUpdate): User | null {
+  async update(id: string, data: UserUpdate): Promise<User | null> {
     const sets: string[] = [];
     const vals: any[] = [];
     if (data.name !== undefined) { sets.push('name = ?'); vals.push(data.name); }
@@ -33,11 +36,11 @@ export const userRepo = {
     if (data.zip !== undefined) { sets.push('zip = ?'); vals.push(data.zip); }
     if (sets.length === 0) return this.findById(id);
     vals.push(id);
-    run(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, vals);
+    await run(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, vals);
     return this.findById(id);
   },
 
-  updateLastActive(id: string): void {
-    run(`UPDATE users SET last_active = ? WHERE id = ?`, [new Date().toISOString(), id]);
+  async updateLastActive(id: string): Promise<void> {
+    await run(`UPDATE users SET last_active = ? WHERE id = ?`, [new Date().toISOString(), id]);
   }
 };
