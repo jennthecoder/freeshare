@@ -17,6 +17,14 @@ export async function initDb(): Promise<Database> {
 
   SQL = await initSqlJs();
 
+  // On Vercel, use in-memory DB (non-persistent)
+  if (process.env.VERCEL) {
+    db = new SQL.Database();
+    setupSchema(db!);
+    console.log('⚠️ Running in Vercel mode: Database is in-memory and will reset on deploy.');
+    return db!;
+  }
+
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
@@ -41,7 +49,8 @@ export function getDb(): Database {
 }
 
 export function saveDb(): void {
-  if (!db) return;
+  // Don't save to FS on Vercel
+  if (!db || process.env.VERCEL) return;
   const data = db.export();
   const buffer = Buffer.from(data);
   fs.writeFileSync(DB_PATH, buffer);
