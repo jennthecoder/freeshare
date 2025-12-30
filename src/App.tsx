@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Header, Modal, Button, Avatar, EmptyState } from './components';
+import { Header, Modal, Button, Avatar, EmptyState, Spinner } from './components';
 import { LocationModal } from './components/LocationModal';
 import { FeedPage, ItemDetailPage, PostItemPage } from './pages';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -40,11 +40,11 @@ function AppContent() {
     loadUnreadCount();
   }, [loadUnreadCount]);
 
-  // Show loading state while checking session (AFTER all hooks)
+  // Show loading state while checking session 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div className="spinner" />
+        <Spinner />
       </div>
     );
   }
