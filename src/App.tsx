@@ -43,8 +43,8 @@ function AppContent() {
   // Show loading state while checking session (AFTER all hooks)
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'var(--font-body)' }}>
-        Loading...
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div className="spinner" />
       </div>
     );
   }
