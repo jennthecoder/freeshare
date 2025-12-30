@@ -22,7 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       authApi.me()
         .then(({ data }) => setUser(data))
-        .catch(() => setAuthToken(null))
+        .catch((err) => {
+          console.warn('Session restore failed:', err.message);
+          setAuthToken(null);
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -38,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await authApi.logout();
-    } catch {}
+    } catch { }
     setAuthToken(null);
     setUser(null);
   };

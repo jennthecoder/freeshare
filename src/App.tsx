@@ -12,8 +12,17 @@ import './styles/global.css';
 type View = 'feed' | 'item' | 'post' | 'messages' | 'conversation' | 'saved' | 'profile';
 
 function AppContent() {
-  const { user, login, logout } = useAuth();
+  const { user, loading, login, logout } = useAuth();
   const { location, setLocation } = useLocation();
+
+  // Show loading state while checking session
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'var(--font-body)' }}>
+        Loading...
+      </div>
+    );
+  }
 
   const [view, setView] = useState<View>('feed');
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
