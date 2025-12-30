@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Header, Modal, Button, Avatar, EmptyState } from './components';
+import { Header, Modal, Button, Avatar, EmptyState, Spinner } from './components';
 import { LocationModal } from './components/LocationModal';
 import { FeedPage, ItemDetailPage, PostItemPage } from './pages';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -12,9 +12,10 @@ import './styles/global.css';
 type View = 'feed' | 'item' | 'post' | 'messages' | 'conversation' | 'saved' | 'profile';
 
 function AppContent() {
-  const { user, login, logout } = useAuth();
+  const { user, loading, login, logout } = useAuth();
   const { location, setLocation } = useLocation();
 
+  // All hooks must be declared before any conditional returns
   const [view, setView] = useState<View>('feed');
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -38,6 +39,15 @@ function AppContent() {
   useEffect(() => {
     loadUnreadCount();
   }, [loadUnreadCount]);
+
+  // Show loading state while checking session 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spinner />
+      </div>
+    );
+  }
 
   const handleItemClick = async (item: Item) => {
     try {

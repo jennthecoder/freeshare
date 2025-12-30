@@ -1,7 +1,7 @@
 const API_BASE = '/api';
 
-let authToken: string | null = typeof localStorage !== 'undefined' 
-  ? localStorage.getItem('freeshare_token') 
+let authToken: string | null = typeof localStorage !== 'undefined'
+  ? localStorage.getItem('freeshare_token')
   : null;
 
 export function setAuthToken(token: string | null) {
@@ -37,7 +37,12 @@ export async function api<T = any>(
     headers,
   });
 
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(response.ok ? 'Invalid response format' : `Server error: ${response.status}`);
+  }
 
   if (!response.ok) {
     throw new Error(data.error || 'Request failed');
@@ -48,14 +53,14 @@ export async function api<T = any>(
 
 // Auth API
 export const authApi = {
-  demoLogin: (name: string) => 
+  demoLogin: (name: string) =>
     api<{ user: any; token: string }>('/auth/demo', {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
-  
+
   logout: () => api('/auth/logout', { method: 'POST' }),
-  
+
   me: () => api('/auth/me'),
 };
 
@@ -70,61 +75,61 @@ export const itemsApi = {
     });
     return api(`/items?${searchParams}`);
   },
-  
+
   get: (id: string) => api(`/items/${id}`),
-  
+
   create: (data: any) => api('/items', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
-  
+
   update: (id: string, data: any) => api(`/items/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
-  
+
   delete: (id: string) => api(`/items/${id}`, { method: 'DELETE' }),
-  
+
   save: (id: string) => api(`/items/${id}/save`, { method: 'POST' }),
-  
+
   unsave: (id: string) => api(`/items/${id}/save`, { method: 'DELETE' }),
-  
+
   saved: () => api('/saved'),
 };
 
 // Users API
 export const usersApi = {
   get: (id: string) => api(`/users/${id}`),
-  
+
   updateMe: (data: any) => api('/users/me', {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
-  
+
   items: (id: string) => api(`/users/${id}/items`),
 };
 
 // Conversations API
 export const conversationsApi = {
   list: () => api('/conversations'),
-  
+
   get: (id: string) => api(`/conversations/${id}`),
-  
+
   create: (data: { itemId: string; participantId: string; initialMessage: string }) =>
     api('/conversations', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  
+
   messages: (id: string) => api(`/conversations/${id}/messages`),
-  
+
   sendMessage: (id: string, content: string) =>
     api(`/conversations/${id}/messages`, {
       method: 'POST',
       body: JSON.stringify({ content }),
     }),
-  
+
   markRead: (id: string) => api(`/conversations/${id}/read`, { method: 'POST' }),
-  
+
   unreadCount: () => api('/messages/unread-count'),
 };

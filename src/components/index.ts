@@ -6,3 +6,4 @@ export { Header } from './Header';
 export { Input } from './Input';
 export { ItemCard } from './ItemCard';
 export { Modal } from './Modal';
+export { Spinner } from './Spinner';
