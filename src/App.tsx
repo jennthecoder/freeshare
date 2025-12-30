@@ -15,15 +15,7 @@ function AppContent() {
   const { user, loading, login, logout } = useAuth();
   const { location, setLocation } = useLocation();
 
-  // Show loading state while checking session
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'var(--font-body)' }}>
-        Loading...
-      </div>
-    );
-  }
-
+  // All hooks must be declared before any conditional returns
   const [view, setView] = useState<View>('feed');
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -47,6 +39,15 @@ function AppContent() {
   useEffect(() => {
     loadUnreadCount();
   }, [loadUnreadCount]);
+
+  // Show loading state while checking session (AFTER all hooks)
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'var(--font-body)' }}>
+        Loading...
+      </div>
+    );
+  }
 
   const handleItemClick = async (item: Item) => {
     try {

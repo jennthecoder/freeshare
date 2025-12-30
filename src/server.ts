@@ -54,6 +54,21 @@ app.post('/api/auth/demo', async (c) => {
   return c.json({ success: true, data: { user, token: session.token } });
 });
 
+// Get current user 
+app.get('/api/auth/me', requireAuth, (c) => {
+  const user = c.get('user');
+  return c.json({ success: true, data: user });
+});
+
+// Logout
+app.post('/api/auth/logout', requireAuth, async (c) => {
+  const token = c.req.header('Authorization')?.slice(7);
+  if (token) {
+    await authService.revokeSession(token);
+  }
+  return c.json({ success: true });
+});
+
 // OAuth Routes
 
 // 1. Redirect to Provider
@@ -106,21 +121,6 @@ app.get('/api/auth/:provider/callback', async (c) => {
     console.error('OAuth Error:', err);
     return c.html(`<h3>Login Failed</h3><p>${err.message}</p><a href="/">Go Home</a>`);
   }
-});
-
-// Logout
-app.post('/api/auth/logout', requireAuth, async (c) => {
-  const token = c.req.header('Authorization')?.slice(7);
-  if (token) {
-    await authService.revokeSession(token);
-  }
-  return c.json({ success: true });
-});
-
-// Get current user
-app.get('/api/auth/me', requireAuth, (c) => {
-  const user = c.get('user');
-  return c.json({ success: true, data: user });
 });
 
 // ============== USER ROUTES ==============
