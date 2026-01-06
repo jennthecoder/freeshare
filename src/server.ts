@@ -23,12 +23,23 @@ export default app;
 // Initialize database
 let dbInitialized = false;
 app.use('*', async (c, next) => {
-  if (!dbInitialized) {
-    await initDb();
-    dbInitialized = true;
-    console.log('✅ Database initialized');
+  try {
+    if (!dbInitialized) {
+      await initDb();
+      dbInitialized = true;
+      console.log('✅ Database initialized');
+    }
+    await next();
+  } catch (err: any) {
+    console.error('Database init error:', err);
+    return c.json({ success: false, error: 'Database connection failed' }, 500);
   }
-  await next();
+});
+
+// Global error handler
+app.onError((err, c) => {
+  console.error('Unhandled error:', err);
+  return c.json({ success: false, error: err.message || 'Internal server error' }, 500);
 });
 
 // Middleware
@@ -38,8 +49,13 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Health check
-app.get('/api/health', (c) => c.json({ status: 'ok', time: new Date().toISOString() }));
+// Health check (also returns env var status for debugging)
+app.get('/api/health', (c) => c.json({
+  status: 'ok',
+  time: new Date().toISOString(),
+  hasDbUrl: !!process.env.TURSO_DATABASE_URL,
+  hasDbToken: !!process.env.TURSO_AUTH_TOKEN,
+}));
 
 // ============== AUTH ROUTES ==============
 
